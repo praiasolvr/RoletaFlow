@@ -933,6 +933,63 @@ export default function OperatorDashboard() {
           </div>
         </div>
       </main>
+
+      {/* MODAL DE SELECIONA DATA */}
+      <Dialog open={isOperationDialogOpen} onOpenChange={setIsOperationDialogOpen}>
+        <DialogContent className="bg-slate-900 border-slate-800 text-white">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold">
+              Iniciar Dia da Operação
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <Label>Dia da Operação</Label>
+            <Input
+              type="date"
+              className="bg-slate-950 border-slate-800 text-white"
+              onChange={(e) => {
+                const raw = e.target.value;
+                if (!raw) return;
+                const [y, m, d] = raw.split('-');
+                const formatted = `${d}/${m}/${y}`;
+                setOperationDate(formatted);
+                localStorage.setItem('operationDate', formatted);
+              }}
+            />
+
+            <Button
+              className="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-semibold"
+              onClick={() => {
+                if (!operationDate) {
+                  toast.error('Selecione uma data válida.');
+                  return;
+                }
+                setIsOperationDialogOpen(false);
+              }}
+            >
+              Confirmar Dia
+            </Button>
+
+            {operationDate && (
+              <Button
+                variant="ghost"
+                className="text-slate-400 hover:text-white hover:bg-slate-800 mt-2"
+                onClick={() => {
+                  setOperationDate('');
+                  localStorage.removeItem('operationDate');
+                  setIsOperationDialogOpen(true);
+                }}
+              >
+                Limpar dia atual ({operationDate})
+              </Button>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+
+
       {/* MODAL DE REGISTRO */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="bg-slate-900 border-slate-800 text-white">
