@@ -377,22 +377,38 @@ export default function OperatorDashboard() {
       'Observação',
       'JornadaFechada',
       'Operador',
-      'CriadoEm'
+      'CriadoEm',
+      'DataOperação'
     ];
 
-    const rows = records.map((r) => [
-      r.vehicleNumber || '',
-      r.vehiclePlate || '',
-      r.companyName || '',
-      r.physicalReading ?? '',
-      r.electronicReading ?? '',
-      r.physicalUnreadable ? 'Sim' : 'Não',
-      r.validatorBroken ? 'Sim' : 'Não',
-      r.observation || '',
-      r.journeyClosed ? 'Sim' : 'Não',
-      r.operatorName || '',
-      r.createdAtDate ? r.createdAtDate.toLocaleString('pt-BR') : ''
-    ]);
+    const rows = records.map((r) => {
+      const createdAt =
+        r.createdAtDate
+          ? (r.createdAtDate.toDate ? r.createdAtDate.toDate() : r.createdAtDate)
+            .toLocaleString('pt-BR')
+          : '';
+
+      const operation =
+        r.operationDate
+          ? (r.operationDate.toDate ? r.operationDate.toDate() : r.operationDate)
+            .toLocaleDateString('pt-BR')
+          : '';
+
+      return [
+        r.vehicleNumber || '',
+        r.vehiclePlate || '',
+        r.companyName || '',
+        r.physicalReading ?? '',
+        r.electronicReading ?? '',
+        r.physicalUnreadable ? 'Sim' : 'Não',
+        r.validatorBroken ? 'Sim' : 'Não',
+        r.observation || '',
+        r.journeyClosed ? 'Sim' : 'Não',
+        r.operatorName || '',
+        createdAt,
+        operation
+      ];
+    });
 
     const csvContent =
       [headers, ...rows]
@@ -403,17 +419,23 @@ export default function OperatorDashboard() {
         )
         .join('\n');
 
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const blob = new Blob(['\ufeff', csvContent], {
+      type: 'text/csv;charset=utf-8;'
+    });
+
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
+
     link.href = url;
     link.setAttribute(
       'download',
       `registros_${operationDate.replace(/\//g, '-')}.csv`
     );
+
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+
     URL.revokeObjectURL(url);
   };
 

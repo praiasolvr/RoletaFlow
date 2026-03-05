@@ -164,9 +164,8 @@ export default function CompanyManagement() {
             <Card
               key={company.id}
               data-testid={`company-card-${company.id}`}
-              className={`p-6 bg-slate-900/50 backdrop-blur-sm ${
-                company.isActive ? 'border-slate-800/50' : 'border-slate-700/30 opacity-60'
-              }`}
+              className={`p-6 bg-slate-900/50 backdrop-blur-sm ${company.isActive ? 'border-slate-800/50' : 'border-slate-700/30 opacity-60'
+                }`}
             >
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-3">
@@ -175,9 +174,8 @@ export default function CompanyManagement() {
                     <h3 className="text-lg font-semibold text-white" style={{ fontFamily: 'Manrope, sans-serif' }}>
                       {company.name}
                     </h3>
-                    <p className={`text-xs ${
-                      company.isActive ? 'text-emerald-500' : 'text-slate-500'
-                    }`}>
+                    <p className={`text-xs ${company.isActive ? 'text-emerald-500' : 'text-slate-500'
+                      }`}>
                       {company.isActive ? 'Ativa' : 'Inativa'}
                     </p>
                   </div>
@@ -198,11 +196,10 @@ export default function CompanyManagement() {
                   data-testid={`toggle-company-${company.id}`}
                   onClick={() => handleToggleActive(company)}
                   variant="outline"
-                  className={`flex-1 border-slate-700 ${
-                    company.isActive
-                      ? 'text-rose-400 hover:bg-rose-900/20'
-                      : 'text-emerald-400 hover:bg-emerald-900/20'
-                  }`}
+                  className={`flex-1 border-slate-700 ${company.isActive
+                    ? 'text-rose-400 hover:bg-rose-900/20'
+                    : 'text-emerald-400 hover:bg-emerald-900/20'
+                    }`}
                 >
                   {company.isActive ? 'Inativar' : 'Ativar'}
                 </Button>
