@@ -96,6 +96,7 @@ export default function Reports() {
 
     setFilteredRecords(filtered);
   };
+
   const exportToCSV = () => {
     const headers = [
       'Data da Operação',
@@ -108,29 +109,36 @@ export default function Reports() {
       'Operador'
     ];
 
+    const rows = filteredRecords.map(record => [
+      record.operationDate?.toDate?.()?.toLocaleDateString('pt-BR') || 'N/A',
+      record.createdAt?.toDate?.()?.toLocaleString('pt-BR') || 'N/A',
+      record.vehicleNumber || '',
+      record.vehiclePlate || '',
+      record.physicalReading || '',
+      record.electronicReading || '',
+      record.journeyClosed ? 'Fechada' : 'Aberta',
+      record.operatorName || ''
+    ]);
+
     const csvContent = [
-      headers.join(','),
-      ...filteredRecords.map(record => [
-        // 🔥 Agora SEM hora
-        record.operationDate?.toDate?.()?.toLocaleDateString('pt-BR') || 'N/A',
-
-        // Lançado em mantém hora
-        record.createdAt?.toDate?.()?.toLocaleString('pt-BR') || 'N/A',
-
-        record.vehicleNumber,
-        record.vehiclePlate,
-        record.physicalReading,
-        record.electronicReading,
-        record.journeyClosed ? 'Fechada' : 'Aberta',
-        record.operatorName
-      ].join(','))
+      headers.join(';'),
+      ...rows.map(row =>
+        row.map(field => `"${String(field).replace(/"/g, '""')}"`).join(';')
+      )
     ].join('\n');
 
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    // 🔥 BOM para corrigir acentuação no Excel
+    const BOM = '\uFEFF';
+
+    const blob = new Blob([BOM + csvContent], {
+      type: 'text/csv;charset=utf-8;'
+    });
+
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
     link.download = `relatorio_roletas_${new Date().toISOString().split('T')[0]}.csv`;
     link.click();
+
     toast.success('Relatório exportado com sucesso!');
   };
 
