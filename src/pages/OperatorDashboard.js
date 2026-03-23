@@ -585,7 +585,7 @@ export default function OperatorDashboard() {
           : 'border-amber-500 bg-slate-900'
           }`}
       >
-        <div className="flex justify-between items-start gap-4">
+        <div className="flex flex-wrap justify-between items-start gap-4">
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-2">
               {item.type === 'done' ? (
@@ -622,15 +622,13 @@ export default function OperatorDashboard() {
                     <span className="text-slate-400">Física:</span>
                     <span
                       className={`ml-2 font-mono font-bold ${item.physicalUnreadable
-                        ? 'text-amber-400'
-                        : mismatch
-                          ? 'text-rose-500'
-                          : 'text-white'
+                          ? 'text-amber-400'
+                          : mismatch
+                            ? 'text-rose-500'
+                            : 'text-white'
                         }`}
                     >
-                      {item.physicalUnreadable
-                        ? 'Ilegível'
-                        : item.physicalReading}
+                      {item.physicalUnreadable ? 'Ilegível' : item.physicalReading}
                     </span>
                   </div>
 
@@ -638,10 +636,10 @@ export default function OperatorDashboard() {
                     <span className="text-slate-400">Eletrônica:</span>
                     <span
                       className={`ml-2 font-mono font-bold ${item.validatorBroken
-                        ? 'text-amber-400'
-                        : mismatch
-                          ? 'text-rose-500'
-                          : 'text-white'
+                          ? 'text-amber-400'
+                          : mismatch
+                            ? 'text-rose-500'
+                            : 'text-white'
                         }`}
                     >
                       {item.validatorBroken
@@ -653,9 +651,7 @@ export default function OperatorDashboard() {
 
                 <div className="mt-2 text-xs text-slate-500 flex flex-col gap-1">
                   <span>
-                    {item.journeyClosed
-                      ? '✓ Jornada Fechada'
-                      : '⚠ Jornada Aberta'}
+                    {item.journeyClosed ? '✓ Jornada Fechada' : '⚠ Jornada Aberta'}
                   </span>
                   <span>
                     Operador:{' '}
@@ -680,7 +676,7 @@ export default function OperatorDashboard() {
             )}
           </div>
 
-          <div className="flex flex-col items-end gap-2">
+          <div className="flex flex-col items-end gap-2 w-full sm:w-auto">
             {item.type === 'done' && (
               <div className="text-xs text-slate-500 text-right">
                 {item.createdAtDate
@@ -691,11 +687,10 @@ export default function OperatorDashboard() {
 
             <Button
               size="sm"
-              className={
-                item.type === 'done'
+              className={`w-full sm:w-auto ${item.type === 'done'
                   ? 'bg-slate-800 hover:bg-slate-700 text-white'
                   : 'bg-amber-500 hover:bg-amber-600 text-slate-950'
-              }
+                }`}
               onClick={() =>
                 item.type === 'done'
                   ? openEditModalForRecord(item)
@@ -706,6 +701,7 @@ export default function OperatorDashboard() {
             </Button>
           </div>
         </div>
+
       </div>
     );
   });
