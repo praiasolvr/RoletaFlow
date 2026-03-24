@@ -93,13 +93,15 @@ Organizado para facilitar manutenção e escalabilidade.
 ---
 
 ## 📈 Próximas melhorias (TODO)
-
+- [ ] Otimizar Perfomase das requisições (Principalmente veículos que está fazendo uma requisição para cada veículo - com 357 fez 358 requisições, otimizar para vim o json completão :)  isso acontece nos demais módulos também
 - [ ] Implementar autenticação de usuários  
 - [ ] Criar painel administrativo  
-- [ ] Melhorar interface de usuário (UI/UX) na tela do operador, tranformando os filtros em botões iguais da tela Admin porém com ativação ao invés de intercalar, exeto o botão "Ver Todos" para limpar os filtros.
+- [x] Melhorar interface de usuário (UI/UX) na tela do operador, tranformando os filtros em botões iguais da tela Admin porém com ativação ao invés de intercalar, exeto o botão "Ver Todos" para limpar os filtros.
 - [ ] Adicionar relatórios e exportação de dados (somente o operador tem exportação em CSV) 
 - [ ] Integração com APIs externas (Aplicação do Chawan) 
-- [ ] Sistema de logs 
+- [ ] Sistema de logs
+- [ ] Corrigir/Inserir os spinner de carregamento nas paginas do admin do: painel_inicial, veículos, empresas, relatórios (Finalizado: "Registrar Leitura" que é o do operador "Catraqueiro")
+
 
 ---
 
