@@ -23,13 +23,6 @@ import {
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import {
@@ -45,6 +38,8 @@ export default function OperatorDashboard() {
   const { userProfile, logout, currentUser } = useAuth();
 
   // ------------------ ESTADOS ------------------
+  const [isLoading, setIsLoading] = useState(true);
+
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isOperationDialogOpen, setIsOperationDialogOpen] = useState(false);
 
@@ -64,27 +59,30 @@ export default function OperatorDashboard() {
     vehicleId: '',
     physicalReading: '',
     electronicReading: '',
-    journeyClosed: false,
+    journeyClosed: true, // começa como jornada fechada
     physicalUnreadable: false,
     validatorBroken: false,
     observation: ''
   });
 
+  // Eletrônica igual à Física ATIVADO por padrão
+  const [sameAsPhysical, setSameAsPhysical] = useState(true);
+
   const [editingRecord, setEditingRecord] = useState(null);
 
   const [filters, setFilters] = useState({
     search: '',
-    discrepancy: 'all',
-    status: 'pending',
-    journey: 'all',
-    sort: 'vehicleAsc'
+    status: 'pending',        // pending | done | all
+    discrepancy: false,
+    journeyOpen: false,
+    validatorBroken: false
   });
 
   const [isOffline, setIsOffline] = useState(false);
 
   // PAGINAÇÃO REAL
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize] = useState(10);
   const [totalFiltered, setTotalFiltered] = useState(0);
 
   const OFFLINE_QUEUE_KEY = 'turnstile_offline_queue';
@@ -213,7 +211,12 @@ export default function OperatorDashboard() {
 
   const loadRecords = async () => {
     try {
-      if (!operationDate) return;
+      setIsLoading(true);
+
+      if (!operationDate) {
+        setIsLoading(false); // <-- ESSENCIAL
+        return;
+      }
 
       const [day, month, year] = operationDate.split('/');
       const startOfDay = new Date(`${year}-${month}-${day}T00:00:00`);
@@ -253,10 +256,14 @@ export default function OperatorDashboard() {
 
       setRecords(list);
       setProgress((prev) => ({ ...prev, done: list.length }));
+      setIsLoading(false);
+
     } catch (err) {
       toast.error('Erro ao carregar registros');
+      setIsLoading(false);
     }
   };
+
 
   // ------------------ FILTROS + PAGINAÇÃO ------------------
   useEffect(() => {
@@ -282,7 +289,7 @@ export default function OperatorDashboard() {
           createdAtDate: null,
           physicalReading: null,
           electronicReading: null,
-          journeyClosed: null,
+          journeyClosed: true,
           operatorName: '',
           physicalUnreadable: false,
           validatorBroken: false,
@@ -297,9 +304,7 @@ export default function OperatorDashboard() {
       const s = filters.search.toLowerCase();
       list = list.filter((r) =>
         (r.vehiclePlate || '').toLowerCase().includes(s) ||
-        (r.vehicleNumber || '').toLowerCase().includes(s) ||
-        (r.companyName || '').toLowerCase().includes(s) ||
-        (r.operatorName || '').toLowerCase().includes(s)
+        (r.vehicleNumber || '').toLowerCase().includes(s)
       );
     }
 
@@ -309,30 +314,29 @@ export default function OperatorDashboard() {
       list = list.filter((r) => r.type === 'done');
     }
 
-    if (filters.discrepancy === 'yes') {
-      list = list.filter(
-        (r) => r.type === 'done' && hasMismatch(r.physicalReading, r.electronicReading)
-      );
-    } else if (filters.discrepancy === 'no') {
+    if (filters.discrepancy) {
       list = list.filter(
         (r) =>
           r.type === 'done' &&
-          !hasMismatch(r.physicalReading, r.electronicReading)
+          hasMismatch(r.physicalReading, r.electronicReading)
       );
     }
 
-    if (filters.journey === 'open') {
-      list = list.filter((r) => r.type === 'done' && !r.journeyClosed);
-    } else if (filters.journey === 'closed') {
-      list = list.filter((r) => r.type === 'done' && r.journeyClosed);
+    if (filters.journeyOpen) {
+      list = list.filter(
+        (r) => r.type === 'done' && !r.journeyClosed
+      );
     }
 
-    if (filters.sort === 'vehicleAsc') {
-      list.sort((a, b) => (a.vehicleNumber || '').localeCompare(b.vehicleNumber || ''));
+    if (filters.validatorBroken) {
+      list = list.filter(
+        (r) => r.type === 'done' && r.validatorBroken
+      );
     }
-    if (filters.sort === 'vehicleDesc') {
-      list.sort((a, b) => (b.vehicleNumber || '').localeCompare(a.vehicleNumber || ''));
-    }
+
+    list.sort((a, b) =>
+      (a.vehicleNumber || '').localeCompare(b.vehicleNumber || '')
+    );
 
     setTotalFiltered(list.length);
 
@@ -343,18 +347,39 @@ export default function OperatorDashboard() {
     setFilteredRecords(paginated);
   };
 
-  const handleFilterChange = (field, value) => {
-    setFilters((prev) => ({ ...prev, [field]: value }));
+  const setStatusFilter = (status) => {
+    setFilters((prev) => ({
+      ...prev,
+      status
+    }));
+    setPage(1);
+  };
+
+  const toggleSpecialFilter = (field) => {
+    setFilters((prev) => {
+      const nextValue = !prev[field];
+      const next = {
+        ...prev,
+        [field]: nextValue
+      };
+
+      // Se ativar Discrepâncias / Jornada Aberta / Defeitos → força status = done
+      if (nextValue && prev.status !== 'done') {
+        next.status = 'done';
+      }
+
+      return next;
+    });
     setPage(1);
   };
 
   const clearFilters = () => {
     setFilters({
       search: '',
-      discrepancy: 'all',
-      status: 'pending',
-      journey: 'all',
-      sort: 'vehicleAsc'
+      status: 'all',
+      discrepancy: false,
+      journeyOpen: false,
+      validatorBroken: false
     });
     setPage(1);
   };
@@ -442,11 +467,12 @@ export default function OperatorDashboard() {
   // ------------------ MODAIS ------------------
   const openRegisterModalForVehicle = (item) => {
     setEditingRecord(null);
+    setSameAsPhysical(true); // padrão: eletrônica igual à física
     setFormData({
       vehicleId: item.vehicleId,
       physicalReading: '',
       electronicReading: '',
-      journeyClosed: false,
+      journeyClosed: true, // começa fechada
       physicalUnreadable: false,
       validatorBroken: false,
       observation: ''
@@ -456,11 +482,16 @@ export default function OperatorDashboard() {
 
   const openEditModalForRecord = (record) => {
     setEditingRecord(record);
+    setSameAsPhysical(
+      record.physicalReading != null &&
+      record.electronicReading != null &&
+      record.physicalReading === record.electronicReading
+    );
     setFormData({
       vehicleId: record.vehicleId,
       physicalReading: record.physicalReading ?? '',
       electronicReading: record.electronicReading ?? '',
-      journeyClosed: Boolean(record.journeyClosed),
+      journeyClosed: record.journeyClosed ?? true,
       physicalUnreadable: Boolean(record.physicalUnreadable),
       validatorBroken: Boolean(record.validatorBroken),
       observation: record.observation || ''
@@ -495,8 +526,6 @@ export default function OperatorDashboard() {
 
     try {
       if (editingRecord) {
-        const before = { ...editingRecord };
-
         await updateDoc(doc(db, 'turnstile_records', editingRecord.id), {
           physicalReading: formData.physicalUnreadable ? null : parseInt(formData.physicalReading),
           electronicReading: formData.validatorBroken ? null : parseInt(formData.electronicReading),
@@ -544,11 +573,12 @@ export default function OperatorDashboard() {
         vehicleId: '',
         physicalReading: '',
         electronicReading: '',
-        journeyClosed: false,
+        journeyClosed: true,
         physicalUnreadable: false,
         validatorBroken: false,
         observation: ''
       });
+      setSameAsPhysical(true);
       setEditingRecord(null);
       setIsDialogOpen(false);
       loadRecords();
@@ -568,143 +598,6 @@ export default function OperatorDashboard() {
 
     return `${v.number || ''} - ${v.plate || ''}`;
   };
-
-
-  // ------------------ COMPONENTE ROW ------------------
-  const Row = React.memo(({ item }) => {
-    const mismatch =
-      item.type === 'done' &&
-      hasMismatch(item.physicalReading, item.electronicReading);
-
-    return (
-      <div
-        className={`p-4 rounded-lg border ${item.type === 'done'
-          ? mismatch
-            ? 'border-rose-500 bg-slate-900'
-            : 'border-slate-800 bg-slate-900'
-          : 'border-amber-500 bg-slate-900'
-          }`}
-      >
-        <div className="flex flex-wrap justify-between items-start gap-4">
-          <div className="flex-1">
-            <div className="flex items-center gap-2 mb-2">
-              {item.type === 'done' ? (
-                mismatch ? (
-                  <AlertTriangle className="h-5 w-5 text-rose-500" />
-                ) : (
-                  <CheckCircle2 className="h-5 w-5 text-emerald-500" />
-                )
-              ) : (
-                <Bus className="h-5 w-5 text-amber-500" />
-              )}
-
-              <span className="text-lg font-mono font-bold text-white">
-                {item.vehicleNumber}
-              </span>
-
-              <span className="text-sm text-slate-400 font-mono">
-                {item.vehiclePlate}
-              </span>
-
-              <span className="text-sm text-slate-400 ml-2">
-                {item.companyName}
-              </span>
-
-              <span className="text-xs px-2 py-0.5 rounded-full border border-slate-700 text-slate-300 ml-2">
-                {item.type === 'done' ? 'Concluído' : 'Pendente'}
-              </span>
-            </div>
-
-            {item.type === 'done' ? (
-              <>
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <span className="text-slate-400">Física:</span>
-                    <span
-                      className={`ml-2 font-mono font-bold ${item.physicalUnreadable
-                          ? 'text-amber-400'
-                          : mismatch
-                            ? 'text-rose-500'
-                            : 'text-white'
-                        }`}
-                    >
-                      {item.physicalUnreadable ? 'Ilegível' : item.physicalReading}
-                    </span>
-                  </div>
-
-                  <div>
-                    <span className="text-slate-400">Eletrônica:</span>
-                    <span
-                      className={`ml-2 font-mono font-bold ${item.validatorBroken
-                          ? 'text-amber-400'
-                          : mismatch
-                            ? 'text-rose-500'
-                            : 'text-white'
-                        }`}
-                    >
-                      {item.validatorBroken
-                        ? 'Validador com defeito'
-                        : item.electronicReading}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="mt-2 text-xs text-slate-500 flex flex-col gap-1">
-                  <span>
-                    {item.journeyClosed ? '✓ Jornada Fechada' : '⚠ Jornada Aberta'}
-                  </span>
-                  <span>
-                    Operador:{' '}
-                    <span className="text-slate-300">
-                      {item.operatorName || '—'}
-                    </span>
-                  </span>
-
-                  {item.observation && (
-                    <span className="flex items-center gap-1 text-amber-300 mt-1">
-                      <FileText className="h-3 w-3" />
-                      Observação: {item.observation}
-                    </span>
-                  )}
-                </div>
-              </>
-            ) : (
-              <div className="mt-1 text-sm text-slate-400">
-                Nenhuma leitura registrada para este veículo na data{' '}
-                {operationDate || '—'}.
-              </div>
-            )}
-          </div>
-
-          <div className="flex flex-col items-end gap-2 w-full sm:w-auto">
-            {item.type === 'done' && (
-              <div className="text-xs text-slate-500 text-right">
-                {item.createdAtDate
-                  ? item.createdAtDate.toLocaleString('pt-BR')
-                  : 'N/A'}
-              </div>
-            )}
-
-            <Button
-              size="sm"
-              className={`w-full sm:w-auto ${item.type === 'done'
-                  ? 'bg-slate-800 hover:bg-slate-700 text-white'
-                  : 'bg-amber-500 hover:bg-amber-600 text-slate-950'
-                }`}
-              onClick={() =>
-                item.type === 'done'
-                  ? openEditModalForRecord(item)
-                  : openRegisterModalForVehicle(item)
-              }
-            >
-              {item.type === 'done' ? 'Editar' : 'Registrar'}
-            </Button>
-          </div>
-        </div>
-
-      </div>
-    );
-  });
 
   // ------------------ RENDER ------------------
   return (
@@ -752,6 +645,7 @@ export default function OperatorDashboard() {
           </div>
         </div>
       </header>
+
       {/* CONTEÚDO PRINCIPAL */}
       <main className="container mx-auto px-4 py-8 space-y-6">
 
@@ -781,124 +675,116 @@ export default function OperatorDashboard() {
         <div className="p-6 bg-slate-900 border border-slate-800 rounded-xl">
           <h3 className="text-xl font-semibold text-white mb-4">Filtros</h3>
 
-          <div className="grid grid-cols-1 md:grid-cols-7 gap-4 items-end">
-
-            {/* BUSCA */}
-            <div className="space-y-1 md:col-span-2">
-              <Label className="text-slate-300 text-xs">Busca</Label>
-              <Input
-                placeholder="Buscar (placa, número, empresa, operador)"
-                value={filters.search}
-                onChange={(e) => handleFilterChange('search', e.target.value)}
-                className="bg-slate-950 border-slate-800 text-white"
-              />
-            </div>
-
-            {/* DISCREPÂNCIA */}
-            <div className="space-y-1">
-              <Label className="text-slate-300 text-xs">Discrepância</Label>
-              <Select
-                value={filters.discrepancy}
-                onValueChange={(v) => handleFilterChange('discrepancy', v)}
-              >
-                <SelectTrigger className="bg-slate-950 border-slate-800 text-white">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="bg-slate-900 border-slate-800">
-                  <SelectItem value="all">Todas</SelectItem>
-                  <SelectItem value="yes">Apenas discrepâncias</SelectItem>
-                  <SelectItem value="no">Sem discrepâncias</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* STATUS */}
-            <div className="space-y-1">
-              <Label className="text-slate-300 text-xs">Status</Label>
-              <Select
-                value={filters.status}
-                onValueChange={(v) => handleFilterChange('status', v)}
-              >
-                <SelectTrigger className="bg-slate-950 border-slate-800 text-white">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="bg-slate-900 border-slate-800">
-                  <SelectItem value="pending">Pendentes</SelectItem>
-                  <SelectItem value="done">Finalizados</SelectItem>
-                  <SelectItem value="all">Todos</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* JORNADA */}
-            <div className="space-y-1">
-              <Label className="text-slate-300 text-xs">Jornada</Label>
-              <Select
-                value={filters.journey}
-                onValueChange={(v) => handleFilterChange('journey', v)}
-              >
-                <SelectTrigger className="bg-slate-950 border-slate-800 text-white">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="bg-slate-900 border-slate-800">
-                  <SelectItem value="all">Todas</SelectItem>
-                  <SelectItem value="open">Abertas</SelectItem>
-                  <SelectItem value="closed">Fechadas</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* ORDENAR */}
-            <div className="space-y-1">
-              <Label className="text-slate-300 text-xs">Ordenar</Label>
-              <Select
-                value={filters.sort}
-                onValueChange={(v) => handleFilterChange('sort', v)}
-              >
-                <SelectTrigger className="bg-slate-950 border-slate-800 text-white">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="bg-slate-900 border-slate-800">
-                  <SelectItem value="vehicleAsc">Veículo (A–Z)</SelectItem>
-                  <SelectItem value="vehicleDesc">Veículo (Z–A)</SelectItem>
-                  <SelectItem value="dateDesc">Data (mais recente)</SelectItem>
-                  <SelectItem value="dateAsc">Data (mais antiga)</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* ITENS POR PÁGINA */}
-            <div className="space-y-1">
-              <Label className="text-slate-300 text-xs">Itens por página</Label>
-              <Select
-                value={String(pageSize)}
-                onValueChange={(v) => {
-                  setPageSize(Number(v));
-                  setPage(1);
-                }}
-              >
-                <SelectTrigger className="bg-slate-950 border-slate-800 text-white">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="bg-slate-900 border-slate-800">
-                  <SelectItem value="10">10</SelectItem>
-                  <SelectItem value="20">20</SelectItem>
-                  <SelectItem value="50">50</SelectItem>
-                  <SelectItem value="100">100</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+          <div className="mb-4">
+            <Label className="text-slate-300 text-xs">Buscar veículo</Label>
+            <Input
+              placeholder="Buscar por número ou placa"
+              value={filters.search}
+              onChange={(e) =>
+                setFilters((prev) => ({ ...prev, search: e.target.value }))
+              }
+              className="bg-slate-950 border-slate-800 text-white mt-1"
+            />
           </div>
 
-          {/* BOTÕES */}
-          <div className="mt-4 flex gap-3">
+          <div className="flex flex-wrap gap-3">
+            {/* VER TODOS */}
             <Button
+              variant={filters.status === 'all' ? 'default' : 'outline'}
+              className={
+                filters.status === 'all'
+                  ? 'bg-amber-500 text-slate-950 font-semibold'
+                  : 'border-slate-700 text-slate-300 hover:bg-slate-800'
+              }
+              onClick={() => setStatusFilter('all')}
+            >
+              Ver todos
+            </Button>
+
+            {/* PENDENTES */}
+            <Button
+              variant={filters.status === 'pending' ? 'default' : 'outline'}
+              className={
+                filters.status === 'pending'
+                  ? 'bg-amber-500 text-slate-950 font-semibold'
+                  : 'border-slate-700 text-slate-300 hover:bg-slate-800'
+              }
+              onClick={() => {
+                setFilters((prev) => ({
+                  ...prev,
+                  status: 'pending',
+                  discrepancy: false,
+                  journeyOpen: false,
+                  validatorBroken: false
+                }));
+                setPage(1);
+              }}
+            >
+              Pendentes
+            </Button>
+
+            {/* CONCLUÍDOS */}
+            <Button
+              variant={filters.status === 'done' ? 'default' : 'outline'}
+              className={
+                filters.status === 'done'
+                  ? 'bg-amber-500 text-slate-950 font-semibold'
+                  : 'border-slate-700 text-slate-300 hover:bg-slate-800'
+              }
+              onClick={() => setStatusFilter('done')}
+            >
+              Concluídos
+            </Button>
+
+            {/* DISCREPÂNCIA */}
+            <Button
+              variant={filters.discrepancy ? 'default' : 'outline'}
+              className={
+                filters.discrepancy
+                  ? 'bg-rose-600 text-white font-semibold'
+                  : 'border-slate-700 text-slate-300 hover:bg-slate-800'
+              }
+              onClick={() => toggleSpecialFilter('discrepancy')}
+            >
+              Discrepâncias
+            </Button>
+
+            {/* JORNADA ABERTA */}
+            <Button
+              variant={filters.journeyOpen ? 'default' : 'outline'}
+              className={
+                filters.journeyOpen
+                  ? 'bg-amber-600 text-white font-semibold'
+                  : 'border-slate-700 text-slate-300 hover:bg-slate-800'
+              }
+              onClick={() => toggleSpecialFilter('journeyOpen')}
+            >
+              Jornada Aberta
+            </Button>
+
+            {/* VALIDADOR COM DEFEITO */}
+            <Button
+              variant={filters.validatorBroken ? 'default' : 'outline'}
+              className={
+                filters.validatorBroken
+                  ? 'bg-amber-500 text-slate-950 font-semibold'
+                  : 'border-slate-700 text-slate-300 hover:bg-slate-800'
+              }
+              onClick={() => toggleSpecialFilter('validatorBroken')}
+            >
+              Defeitos
+            </Button>
+
+            {/* LIMPAR */}
+            <Button
+              className="border-slate-700 text-slate-300 hover:bg-slate-800"
+              variant="outline"
               onClick={clearFilters}
-              className="bg-slate-800 hover:bg-slate-700 text-white"
             >
               Limpar Filtros
             </Button>
 
+            {/* EXPORT CSV */}
             <Button
               variant="outline"
               className="border-amber-500 text-amber-400 hover:bg-amber-500/10 text-xs"
@@ -917,17 +803,39 @@ export default function OperatorDashboard() {
 
           <div className="space-y-3">
             {filteredRecords.map((item) => (
-              <Row key={item.id} item={item} />
+              <Row
+                key={item.id}
+                item={item}
+                openEditModalForRecord={openEditModalForRecord}
+                openRegisterModalForVehicle={openRegisterModalForVehicle}
+                operationDate={operationDate}
+              />
             ))}
           </div>
 
-          {filteredRecords.length === 0 && (
+          {isLoading ? (
+            <div className="p-8 text-center text-slate-400">
+              Carregando...
+            </div>
+          ) : filteredRecords.length === 0 ? (
             <div className="p-8 text-center text-slate-400">
               Nenhum veículo encontrado com os filtros atuais.
             </div>
+          ) : (
+            <div className="space-y-3">
+              {filteredRecords.map((item) => (
+                <Row
+                  key={item.id}
+                  item={item}
+                  openEditModalForRecord={openEditModalForRecord}
+                  openRegisterModalForVehicle={openRegisterModalForVehicle}
+                  operationDate={operationDate}
+                />
+              ))}
+            </div>
           )}
 
-          {/* PAGINAÇÃO */}
+
           <div className="flex justify-between items-center mt-6">
             <Button
               disabled={page === 1}
@@ -1006,8 +914,6 @@ export default function OperatorDashboard() {
         </DialogContent>
       </Dialog>
 
-
-
       {/* MODAL DE REGISTRO */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="bg-slate-900 border-slate-800 text-white">
@@ -1018,7 +924,6 @@ export default function OperatorDashboard() {
           </DialogHeader>
 
           <form onSubmit={handleSubmit} className="space-y-4">
-
             {/* VEÍCULO */}
             <div>
               <Label className="text-slate-300">Veículo</Label>
@@ -1038,12 +943,16 @@ export default function OperatorDashboard() {
                   type="number"
                   required={!formData.physicalUnreadable}
                   value={formData.physicalReading}
-                  onChange={(e) =>
+                  onChange={(e) => {
+                    const value = e.target.value;
                     setFormData((prev) => ({
                       ...prev,
-                      physicalReading: e.target.value
-                    }))
-                  }
+                      physicalReading: value,
+                      electronicReading: sameAsPhysical
+                        ? value
+                        : prev.electronicReading
+                    }));
+                  }}
                   className="bg-slate-800 border-slate-700 text-white"
                 />
               )}
@@ -1067,20 +976,38 @@ export default function OperatorDashboard() {
             <div>
               <Label className="text-slate-300">Leitura Eletrônica</Label>
 
-              {!formData.validatorBroken && (
-                <Input
-                  type="number"
-                  required={!formData.validatorBroken}
-                  value={formData.electronicReading}
-                  onChange={(e) =>
+              <Input
+                type="number"
+                required={!formData.validatorBroken} // se marcado, vira opcional
+                disabled={sameAsPhysical}
+                value={formData.electronicReading}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    electronicReading: e.target.value
+                  }))
+                }
+                className={`bg-slate-800 border-slate-700 text-white ${sameAsPhysical ? 'opacity-50 cursor-not-allowed' : ''
+                  }`}
+              />
+
+              <div className="flex items-center gap-2 mt-2">
+                <Checkbox
+                  checked={sameAsPhysical}
+                  onCheckedChange={(checked) => {
+                    setSameAsPhysical(checked);
                     setFormData((prev) => ({
                       ...prev,
-                      electronicReading: e.target.value
-                    }))
-                  }
-                  className="bg-slate-800 border-slate-700 text-white"
+                      electronicReading: checked
+                        ? prev.physicalReading
+                        : prev.electronicReading
+                    }));
+                  }}
                 />
-              )}
+                <Label className="text-slate-300">
+                  Eletrônica igual à Física
+                </Label>
+              </div>
 
               <div className="flex items-center gap-2 mt-2">
                 <Checkbox
@@ -1117,15 +1044,15 @@ export default function OperatorDashboard() {
             {/* JORNADA */}
             <div className="flex items-center gap-2">
               <Checkbox
-                checked={formData.journeyClosed}
+                checked={!formData.journeyClosed}
                 onCheckedChange={(v) =>
                   setFormData((prev) => ({
                     ...prev,
-                    journeyClosed: Boolean(v)
+                    journeyClosed: !Boolean(v) // marcado = aberta (false)
                   }))
                 }
               />
-              <Label className="text-slate-300">Jornada Fechada</Label>
+              <Label className="text-slate-300">Jornada Aberta</Label>
             </div>
 
             {/* BOTÃO SALVAR */}
@@ -1141,3 +1068,143 @@ export default function OperatorDashboard() {
     </div>
   );
 }
+
+// ------------------ COMPONENTE ROW ------------------
+const Row = React.memo(
+  ({ item, openEditModalForRecord, openRegisterModalForVehicle, operationDate }) => {
+    const mismatch =
+      item.type === 'done' &&
+      item.physicalReading != null &&
+      item.electronicReading != null &&
+      item.physicalReading !== item.electronicReading;
+
+    return (
+      <div
+        className={`p-4 rounded-lg border ${item.type === 'done'
+          ? mismatch
+            ? 'border-rose-500 bg-slate-900'
+            : 'border-slate-800 bg-slate-900'
+          : 'border-amber-500 bg-slate-900'
+          }`}
+      >
+        <div className="flex flex-wrap justify-between items-start gap-4">
+          <div className="flex-1">
+            <div className="flex items-center gap-2 mb-2">
+              {item.type === 'done' ? (
+                mismatch ? (
+                  <AlertTriangle className="h-5 w-5 text-rose-500" />
+                ) : (
+                  <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+                )
+              ) : (
+                <Bus className="h-5 w-5 text-amber-500" />
+              )}
+
+              <span className="text-lg font-mono font-bold text-white">
+                {item.vehicleNumber}
+              </span>
+
+              <span className="text-sm text-slate-400 font-mono">
+                {item.vehiclePlate}
+              </span>
+
+              <span className="text-sm text-slate-400 ml-2">
+                {item.companyName}
+              </span>
+
+              <span className="text-xs px-2 py-0.5 rounded-full border border-slate-700 text-slate-300 ml-2">
+                {item.type === 'done' ? 'Concluído' : 'Pendente'}
+              </span>
+            </div>
+
+            {item.type === 'done' ? (
+              <>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="text-slate-400">Física:</span>
+                    <span
+                      className={`ml-2 font-mono font-bold ${item.physicalUnreadable
+                        ? 'text-amber-400'
+                        : mismatch
+                          ? 'text-rose-500'
+                          : 'text-white'
+                        }`}
+                    >
+                      {item.physicalUnreadable ? 'Ilegível' : item.physicalReading}
+                    </span>
+                  </div>
+
+                  <div>
+                    <span className="text-slate-400">Eletrônica:</span>
+                    <span
+                      className={`ml-2 font-mono font-bold ${item.validatorBroken
+                        ? 'text-amber-400'
+                        : mismatch
+                          ? 'text-rose-500'
+                          : 'text-white'
+                        }`}
+                    >
+                      {item.validatorBroken
+                        ? 'Validador com defeito'
+                        : item.electronicReading}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="mt-2 text-xs text-slate-500 flex flex-col gap-1">
+                  <span>
+                    {!item.journeyClosed ? '⚠ Jornada Aberta' : '✓ Jornada Fechada'}
+                  </span>
+
+                  <span>
+                    Operador:{' '}
+                    <span className="text-slate-300">
+                      {item.operatorName || '—'}
+                    </span>
+                  </span>
+
+                  {item.observation && (
+                    <span className="flex items-center gap-1 text-amber-300 mt-1">
+                      <FileText className="h-3 w-3" />
+                      Observação: {item.observation}
+                    </span>
+                  )}
+                </div>
+              </>
+            ) : (
+              <div className="mt-1 text-sm text-slate-400">
+                Nenhuma leitura registrada para este veículo na data{' '}
+                {operationDate || '—'}.
+              </div>
+            )}
+          </div>
+
+          <div className="flex flex-col items-end gap-2 w-full sm:w-auto">
+            {item.type === 'done' && (
+              <div className="text-xs text-slate-500 text-right">
+                {item.createdAtDate
+                  ? item.createdAtDate.toLocaleString('pt-BR')
+                  : 'N/A'}
+              </div>
+            )}
+
+            <Button
+              size="sm"
+              className={`w-full sm:w-auto ${item.type === 'done'
+                ? 'bg-slate-800 hover:bg-slate-700 text-white'
+                : 'bg-amber-500 hover:bg-amber-600 text-slate-950'
+                }`}
+              onClick={() =>
+                item.type === 'done'
+                  ? openEditModalForRecord(item)
+                  : openRegisterModalForVehicle(item)
+              }
+            >
+              {item.type === 'done' ? 'Editar' : 'Registrar'}
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+);
