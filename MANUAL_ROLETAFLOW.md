@@ -94,6 +94,8 @@ O que muda é o perfil, que define quais módulos aparecem.
 
 ### 4.1 Login
 
+![Dashboard do Operador](./public/print-login.png)
+
 - Informar e-mail  
 - Informar senha  
 - Clicar em Entrar  
