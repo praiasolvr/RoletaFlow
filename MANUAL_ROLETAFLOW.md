@@ -108,6 +108,7 @@ Usuários são criados pela TI ou administrador.
 
 ### 5.1 Tela Inicial
 ![Dashboard do Operador](./public/print-operador1.png)
+![Dashboard do Operador](./public/print-operador2.png)
 
 
 O operador visualiza:
@@ -117,6 +118,7 @@ O operador visualiza:
 - Botão **Registrar** para cada veículo  
 
 ### 5.2 Registro de Leitura
+![Dashboard do Operador](./public/print-operador3.png)
 
 Ao clicar em **Registrar**, o operador preenche:
 
