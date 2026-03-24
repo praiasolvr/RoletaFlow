@@ -76,6 +76,14 @@ Este sistema é voltado para:
 
 ---
 
+## 📘 Manual de Utilização
+
+Para instruções detalhadas de uso do sistema, consulte o [Manual de Usuário](MANUAL_ROLETAFLOW.md).
+
+---
+
+
+
 ## 🗂️ Estrutura do projeto
 
 Organizado para facilitar manutenção e escalabilidade.
