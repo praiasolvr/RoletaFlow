@@ -321,7 +321,7 @@ O sistema identifica automaticamente divergências entre catraca física e eletr
 | Tipo                      | Descrição                      | Quem vê                     | Ação                                                                                     |
 |---------------------------|-------------------------------|-----------------------------|------------------------------------------------------------------------------------------|
 | Diferença leve (1–2 giros) | Divergência pequena            | Tráfego + Bilhetagem + CETURB  | Tráfego opera normalmente apesar da divergência; deve solicitar correção oficial ao COC em contato com a CETURB.  |
-| Diferença crítica (>2 giros) | Pode indicar falha grave ou fraude | Tráfego + Bilhetagem + CETURB  | Parar veículo imediatamente e acionar COC para correção oficial.                         |
+| Diferença crítica (>2 giros) | Pode indicar falha grave podendo agravar | Tráfego + Bilhetagem + CETURB  | Parar veículo imediatamente e acionar COC para correção oficial.                         |
 | Validador com defeito      | Operador marcou                | Tráfego + Bilhetagem        | Verificar equipamento.                                                                   |
 | Leitura ilegível           | Operador marcou                | Bilhetagem                  | Ajuste manual.                                                                           |
 
