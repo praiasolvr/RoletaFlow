@@ -107,6 +107,8 @@ Usuários são criados pela TI ou administrador.
 ## 5. Fluxo de Trabalho — Operador (Catraqueiro)
 
 ### 5.1 Tela Inicial
+![Dashboard do Operador](./public/print-operador1.png)
+
 
 O operador visualiza:
 
