@@ -229,7 +229,36 @@ Campos:
 
 ## 6.4 Registrar Leitura (Admin)
 
-*(Se houver print específico, inserir aqui)*
+O administrador também possui permissão para registrar leituras manualmente.  
+A funcionalidade é **idêntica à utilizada pelo operador**, porém a interface exibida depende do dispositivo:
+
+### • Versão Desktop (Admin)
+Quando acessado pelo computador, o administrador visualiza uma tela mais ampla, com filtros adicionais e layout otimizado para produtividade.
+
+![Registro Admin Desktop](./public/print-admin7.png)
+
+### • Versão Mobile (Operador)
+Quando acessado pelo celular ou tablet, a interface é compactada automaticamente, exibindo apenas os campos essenciais para agilizar o trabalho do operador.
+
+A lógica de registro é a mesma:
+
+- Leitura Física  
+- Leitura Eletrônica  
+- Leitura Física Ilegível  
+- Validador com Defeito  
+- Observação  
+- Jornada Fechada  
+
+### Quando o Admin utiliza essa função?
+- Para registrar leituras atrasadas  
+- Para corrigir registros incorretos  
+- Para registrar veículos que passaram sem vistoria  
+- Para auxiliar o operador em caso de falhas no dispositivo  
+- Para auditoria interna ou conferência de dados
+
+> **Observação:**  
+> Mesmo com telas diferentes, o processo de registro é exatamente o mesmo.  
+> A diferença está apenas na interface adaptada ao dispositivo (desktop vs. mobile).
 
 ---
 
