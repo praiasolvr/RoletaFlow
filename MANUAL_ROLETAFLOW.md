@@ -189,12 +189,12 @@ O sistema identifica automaticamente divergências entre catraca física e eletr
 
 ### 8.1 Tipos de Divergência
 
-| Tipo | Descrição | Quem vê | Ação |
-|------|-----------|---------|------|
-| Diferença leve (1–2 giros) | Divergência pequena | Tráfego + Bilhetagem | Bilhetagem corrige |
-| Diferença crítica (>2 giros) | Pode indicar falha grave ou fraude | Tráfego + Bilhetagem + COC | Parar veículo |
-| Validador com defeito | Operador marcou | Tráfego + Bilhetagem | Verificar equipamento |
-| Leitura ilegível | Operador marcou | Bilhetagem | Ajuste manual |
+| Tipo                      | Descrição                      | Quem vê                     | Ação                                                                                     |
+|---------------------------|-------------------------------|-----------------------------|------------------------------------------------------------------------------------------|
+| Diferença leve (1–2 giros) | Divergência pequena            | Tráfego + Bilhetagem + COC  | Tráfego pode operar temporariamente sem carro; correção oficial é feita pelo COC após solicitação à CETURB.  |
+| Diferença crítica (>2 giros) | Pode indicar falha grave ou fraude | Tráfego + Bilhetagem + COC  | Parar veículo imediatamente e acionar COC para correção oficial.                         |
+| Validador com defeito      | Operador marcou                | Tráfego + Bilhetagem        | Verificar equipamento.                                                                   |
+| Leitura ilegível           | Operador marcou                | Bilhetagem                  | Ajuste manual.                                                                           |
 
 ### 8.2 Regra Operacional — Divergência Crítica
 
