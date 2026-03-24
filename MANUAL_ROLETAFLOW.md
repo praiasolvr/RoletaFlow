@@ -14,13 +14,18 @@
 4. Acesso ao Sistema  
 5. Fluxo de Trabalho — Operador (Catraqueiro)  
 6. Fluxo de Trabalho — Administrador / Tráfego  
+   - 6.1 Dashboard Administrativo  
+   - 6.2 Gerenciar Empresas  
+   - 6.3 Gerenciar Veículos  
+   - 6.4 Registrar Leitura (Admin)  
+   - 6.5 Relatórios  
 7. Fluxo de Trabalho — Bilhetagem  
 8. Divergências e Procedimentos Operacionais  
 9. Funcionamento Offline  
 10. Exportação e Relatórios  
 11. Erros Comuns e Soluções  
 12. Suporte  
-13. Glossário
+13. Glossário 
 
 ---
 
@@ -143,21 +148,116 @@ Após registrar:
 
 ### 6.1 Dashboard Administrativo
 
+![Dashboard Admin](./public/print-admin1.png)
+
 O administrador visualiza:
 
 - Total de veículos  
+- Empresas cadastradas  
 - Registros do dia  
 - Divergências  
-- Botões de gestão  
+- Jornadas abertas  
 
-### 6.2 Análise de Divergências
+Abas disponíveis:
 
-O tráfego pode:
+- **Todos os Registros**  
+- **Discrepâncias**  
+- **Jornada Aberta**  
 
-- Filtrar por discrepância  
-- Ver divergências críticas  
-- Exportar CSV  
-- Tomar ações operacionais (parar veículo)
+Cada registro exibe:
+
+- Número do veículo  
+- Placa  
+- Leitura física  
+- Leitura eletrônica  
+- Jornada  
+- Operador  
+- Data e hora do lançamento  
+
+---
+
+## 6.2 Gerenciar Empresas
+
+![Gerenciar Empresas](./public/print-admin2.png)
+
+Nesta tela, o administrador pode:
+
+- Adicionar novas empresas  
+- Editar empresas existentes  
+- Inativar empresas  
+
+Cada empresa exibe:
+
+- Nome  
+- Status  
+- Botões de ação  
+
+---
+
+## 6.3 Gerenciar Veículos
+
+![Gerenciar Veículos - Cards](./public/print-admin3.png)  
+![Gerenciar Veículos - Tabela](./public/print-admin4.png)
+
+O administrador pode:
+
+- Adicionar veículos  
+- Importar veículos  
+- Editar veículos  
+- Inativar veículos  
+
+Cada veículo exibe:
+
+- Número  
+- Placa  
+- Tipo  
+- Empresa  
+- Status  
+
+### 6.3.1 Adicionar Veículo
+
+![Novo Veículo](./public/print-admin5.png)
+
+Campos:
+
+- Número  
+- Placa  
+- Tipo  
+- Empresa  
+
+---
+
+## 6.4 Registrar Leitura (Admin)
+
+*(Se houver print específico, inserir aqui)*
+
+---
+
+## 6.5 Relatórios
+
+![Relatórios](./public/print-admin6.png)
+
+A tela de relatórios permite:
+
+- Filtrar por veículo, placa, operador  
+- Selecionar data da operação  
+- Ver totais:  
+  - Registros  
+  - Discrepâncias  
+  - Jornadas fechadas  
+  - Jornadas abertas  
+- Exportar dados  
+
+Cada registro exibe:
+
+- Número do veículo  
+- Placa  
+- Leitura física  
+- Leitura eletrônica  
+- Jornada  
+- Operador  
+- Data da operação  
+- Data do lançamento  
 
 ---
 
