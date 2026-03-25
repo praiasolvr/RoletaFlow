@@ -101,7 +101,7 @@ Organizado para facilitar manutenção e escalabilidade.
 - [ ] Integração com APIs externas (Aplicação do Chawan) 
 - [ ] Sistema de logs
 - [ ] Corrigir/Inserir os spinner de carregamento nas paginas do admin do: painel_inicial, veículos, empresas, relatórios (Finalizado: "Registrar Leitura" que é o do operador "Catraqueiro")
-
+- [ ] Criar Contexto e cookies otimizando a perfomace analisando os imapactos.
 
 ---
 
